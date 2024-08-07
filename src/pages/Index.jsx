@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Cat, Paw, Heart, Info, Star, Sparkles, Moon, Sun } from "lucide-react";
+import { Cat, Paw, Heart, Info, Star, Sparkles, Moon, Sun, Camera, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -9,14 +9,24 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const catBreeds = [
-  { name: "Siamese", image: "https://upload.wikimedia.org/wikipedia/commons/2/25/Siam_lilacpoint.jpg", personality: "Vocal and affectionate", intelligence: 90 },
-  { name: "Persian", image: "https://upload.wikimedia.org/wikipedia/commons/1/15/White_Persian_Cat.jpg", personality: "Calm and gentle", intelligence: 75 },
-  { name: "Maine Coon", image: "https://upload.wikimedia.org/wikipedia/commons/5/5f/Maine_Coon_cat_by_Tomitheos.JPG", personality: "Friendly and playful", intelligence: 85 },
-  { name: "British Shorthair", image: "https://upload.wikimedia.org/wikipedia/commons/9/9d/Britishblue.jpg", personality: "Easygoing and loyal", intelligence: 80 },
-  { name: "Sphynx", image: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Sphinx2_July_2006.jpg", personality: "Energetic and mischievous", intelligence: 88 },
+  { name: "Siamese", image: "https://upload.wikimedia.org/wikipedia/commons/2/25/Siam_lilacpoint.jpg", personality: "Vocal and affectionate", intelligence: 90, popularity: 85 },
+  { name: "Persian", image: "https://upload.wikimedia.org/wikipedia/commons/1/15/White_Persian_Cat.jpg", personality: "Calm and gentle", intelligence: 75, popularity: 80 },
+  { name: "Maine Coon", image: "https://upload.wikimedia.org/wikipedia/commons/5/5f/Maine_Coon_cat_by_Tomitheos.JPG", personality: "Friendly and playful", intelligence: 85, popularity: 90 },
+  { name: "British Shorthair", image: "https://upload.wikimedia.org/wikipedia/commons/9/9d/Britishblue.jpg", personality: "Easygoing and loyal", intelligence: 80, popularity: 75 },
+  { name: "Sphynx", image: "https://upload.wikimedia.org/wikipedia/commons/e/e8/Sphinx2_July_2006.jpg", personality: "Energetic and mischievous", intelligence: 88, popularity: 70 },
 ];
+
+const popularityData = catBreeds.map(breed => ({
+  name: breed.name,
+  popularity: breed.popularity,
+  intelligence: breed.intelligence
+}));
 
 const catFacts = [
   "Cats have been domesticated for over 4,000 years.",
@@ -34,6 +44,8 @@ const Index = () => {
   const [likedBreeds, setLikedBreeds] = useState({});
   const [selectedBreed, setSelectedBreed] = useState(null);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [catName, setCatName] = useState("");
+  const [catPhoto, setCatPhoto] = useState(null);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -53,6 +65,17 @@ const Index = () => {
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
+  };
+
+  const handlePhotoUpload = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCatPhoto(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -112,6 +135,49 @@ const Index = () => {
           <p className={`text-xl ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>Dive into a world of purrs, whiskers, and endless curiosity!</p>
         </motion.div>
 
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="mb-8 bg-purple-500 hover:bg-purple-600">
+              <Camera className="mr-2 h-4 w-4" /> Upload Your Cat Photo
+            </Button>
+          </DialogTrigger>
+          <DialogContent className={`${isDarkMode ? 'bg-gray-800 text-white' : 'bg-white'}`}>
+            <DialogHeader>
+              <DialogTitle>Upload Your Cat Photo</DialogTitle>
+              <DialogDescription>Share a picture of your feline friend!</DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="name" className="text-right">
+                  Cat's Name
+                </Label>
+                <Input
+                  id="name"
+                  value={catName}
+                  onChange={(e) => setCatName(e.target.value)}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="photo" className="text-right">
+                  Photo
+                </Label>
+                <Input
+                  id="photo"
+                  type="file"
+                  onChange={handlePhotoUpload}
+                  className="col-span-3"
+                />
+              </div>
+            </div>
+            {catPhoto && (
+              <div className="mt-4">
+                <img src={catPhoto} alt="Uploaded cat" className="max-w-full h-auto rounded-lg" />
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -152,33 +218,56 @@ const Index = () => {
                 <h2 className={`text-3xl font-semibold mb-4 ${isDarkMode ? 'text-purple-300' : 'text-purple-600'} flex items-center`}>
                   <Star className="mr-2" /> Cat Breed Spotlight
                 </h2>
-                {selectedBreed ? (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <img src={selectedBreed.image} alt={selectedBreed.name} className="w-full h-48 object-cover rounded-lg mb-4 shadow-md" />
-                    <h3 className={`text-2xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{selectedBreed.name}</h3>
-                    <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-2`}>{selectedBreed.personality}</p>
-                    <div className="flex items-center mb-2">
-                      <span className={`mr-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Intelligence:</span>
-                      <Progress value={selectedBreed.intelligence} className="w-1/2" />
-                      <span className={`ml-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{selectedBreed.intelligence}%</span>
+                <Tabs defaultValue="breeds" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="breeds">Breeds</TabsTrigger>
+                    <TabsTrigger value="stats">Stats</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="breeds">
+                    {selectedBreed ? (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.5 }}
+                      >
+                        <img src={selectedBreed.image} alt={selectedBreed.name} className="w-full h-48 object-cover rounded-lg mb-4 shadow-md" />
+                        <h3 className={`text-2xl font-semibold mb-2 ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{selectedBreed.name}</h3>
+                        <p className={`${isDarkMode ? 'text-gray-300' : 'text-gray-600'} mb-2`}>{selectedBreed.personality}</p>
+                        <div className="flex items-center mb-2">
+                          <span className={`mr-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>Intelligence:</span>
+                          <Progress value={selectedBreed.intelligence} className="w-1/2" />
+                          <span className={`ml-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{selectedBreed.intelligence}%</span>
+                        </div>
+                        <Button onClick={() => setSelectedBreed(null)} variant="outline" className={isDarkMode ? 'text-white' : ''}>
+                          Back to Breeds
+                        </Button>
+                      </motion.div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-4">
+                        {catBreeds.map((breed) => (
+                          <Button key={breed.name} onClick={() => setSelectedBreed(breed)} variant="outline" className={`h-auto py-2 ${isDarkMode ? 'text-white hover:text-purple-300' : ''}`}>
+                            {breed.name}
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </TabsContent>
+                  <TabsContent value="stats">
+                    <div className="w-full h-64">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={popularityData}>
+                          <CartesianGrid strokeDasharray="3 3" />
+                          <XAxis dataKey="name" />
+                          <YAxis />
+                          <RechartsTooltip />
+                          <Legend />
+                          <Line type="monotone" dataKey="popularity" stroke="#8884d8" activeDot={{ r: 8 }} />
+                          <Line type="monotone" dataKey="intelligence" stroke="#82ca9d" />
+                        </LineChart>
+                      </ResponsiveContainer>
                     </div>
-                    <Button onClick={() => setSelectedBreed(null)} variant="outline" className={isDarkMode ? 'text-white' : ''}>
-                      Back to Breeds
-                    </Button>
-                  </motion.div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-4">
-                    {catBreeds.map((breed) => (
-                      <Button key={breed.name} onClick={() => setSelectedBreed(breed)} variant="outline" className={`h-auto py-2 ${isDarkMode ? 'text-white hover:text-purple-300' : ''}`}>
-                        {breed.name}
-                      </Button>
-                    ))}
-                  </div>
-                )}
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           </motion.div>
@@ -257,6 +346,28 @@ const Index = () => {
               )
             )}
           </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mt-12 text-center"
+        >
+          <h3 className={`text-3xl font-semibold mb-4 ${isDarkMode ? 'text-purple-300' : 'text-purple-600'} flex items-center justify-center`}>
+            <Zap className="mr-2" /> Cat Power Meter
+          </h3>
+          <div className="w-full max-w-md mx-auto bg-gray-200 rounded-full h-6 dark:bg-gray-700">
+            <motion.div 
+              className="bg-purple-600 h-6 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${Object.values(likedBreeds).filter(Boolean).length * 20}%` }}
+              transition={{ duration: 1 }}
+            />
+          </div>
+          <p className={`mt-2 ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            Your cat power is at {Object.values(likedBreeds).filter(Boolean).length * 20}%!
+          </p>
         </motion.div>
       </div>
     </div>
